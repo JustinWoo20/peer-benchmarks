@@ -10,3 +10,6 @@
 # Bytecode cache
 __pycache__/
 *.py[cod]
+
+# personal notes for project
+peer_benchmarks/notes.txt
