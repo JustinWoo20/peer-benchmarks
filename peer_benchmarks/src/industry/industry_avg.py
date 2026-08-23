@@ -28,6 +28,8 @@ def get_market_cap(ticker):
     if market_cap is None:
         shares_outstanding = info.get('sharesOutstanding') or info.get('floatShares')
         current_price = info.get('currentPrice')
+        if current_price is None or shares_outstanding is None:
+            return 0
         market_cap = shares_outstanding * current_price
     return market_cap
 
