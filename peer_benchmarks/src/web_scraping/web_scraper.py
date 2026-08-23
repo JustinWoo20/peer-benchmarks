@@ -2,12 +2,11 @@ from bs4 import BeautifulSoup
 import requests
 
 # Fetch yfinance api page
-url_key = 'https://ranaroussi.github.io/yfinance/reference/api/yfinance.Sector.html'
-url_equity_query = 'https://ranaroussi.github.io/yfinance/reference/api/yfinance.EquityQuery.html'
 
-def obtain_key_identifiers(url):
+def obtain_key_identifiers():
     """Obtains the sector and industry keys for yf Sector/Industry class"""
-    response = requests.get(url)
+    url_key = 'https://ranaroussi.github.io/yfinance/reference/api/yfinance.Sector.html'
+    response = requests.get(url_key)
     soup = BeautifulSoup(response.content, 'html.parser')
     industry_key_list = []
     sector_key_list = []
@@ -27,9 +26,10 @@ def obtain_key_identifiers(url):
     sect_ind_dict = dict(zip(sector_key_list, industry_key_list))
     return sect_ind_dict
 
-def obtain_equity_query(url):
+def obtain_equity_query():
     """Obtains the sector and industry keys for yf Equity class"""
-    response = requests.get(url)
+    url_equity_query = 'https://ranaroussi.github.io/yfinance/reference/api/yfinance.EquityQuery.html'
+    response = requests.get(url_equity_query)
     soup = BeautifulSoup(response.content, 'html.parser')
     industry_data = {}
     table = soup.find(id='id2')
