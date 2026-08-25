@@ -94,8 +94,7 @@ for si in screener_industries.values():
 industry_values = {}
 for ind, stocks in industry_stock_dict.items():
     print(f'Now working on {ind}')
-    if stocks is None:
-        del
+
     industry_mc = 0
     industry_equity = 0
     industry_debt = 0
