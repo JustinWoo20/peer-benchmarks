@@ -43,11 +43,18 @@ def get_income_statistics(ticker):
     elif len(revenue) < 2:
         return 0, 0, 0
     else:
-        recent_revenue = revenue.iloc[0]
-        previous_revenue_in = revenue.iloc[1]
+        revenue.fillna(0)
+
+    recent_revenue = revenue.iloc[0]
+    previous_revenue_in = revenue.iloc[1]
+    if recent_revenue == 0 or previous_revenue_in == 0:
+        return 0, 0, 0
 
     gp = income_transposed.get('GrossProfit')
     if gp is None:
+        return 0, 0, 0
+    gp.fillna(0)
+    if gp.iloc[0] == 0:
         return 0, 0, 0
     gp = gp.iloc[0]
     return recent_revenue, previous_revenue_in, gp
@@ -56,13 +63,22 @@ def get_balance_statistics(ticker):
     balance_sheet = ticker.get_balance_sheet()
     balance_transposed = balance_sheet.transpose()
     total_shareholder_equity_series = balance_transposed.get('StockholdersEquity')
-    if total_shareholder_equity_series.iloc[0] <= 0:
+    total_shareholder_equity_series.fillna(0)
+    if total_shareholder_equity_series is None:
         return 0, 0
-    total_shareholder_equity = total_shareholder_equity_series.iloc[0]
+    elif total_shareholder_equity_series.iloc[0] <= 0:
+        return 0, 0
+    else:
+        total_shareholder_equity = total_shareholder_equity_series.iloc[0]
+
     td = balance_transposed.get('TotalDebt')
     if td is None:
         return 0, 0
-    td = td.iloc[0]
+    else:
+        td.fillna(0)
+        if td.iloc[0] == 0:
+            return 0, 0
+        td = td.iloc[0]
     return total_shareholder_equity, td
 
 def pe_ratios(ticker):
@@ -73,7 +89,14 @@ def pe_ratios(ticker):
     net_income = income_transposed.get('NetIncome')
     if net_income is None:
         net_income = income_transposed.get('NetIncomeCommonStockholders')
-    net_income = net_income.iloc[0]
+        if net_income is not None:
+            net_income = net_income.iloc[0]
+        else:
+            net_income = info.get('netIncomeToCommon')
+            if net_income is None:
+                return 0, 0, 0
+    else:
+        net_income = net_income.iloc[0]
     market_cap = get_market_cap(ticker)
     ttm_pe = market_cap / net_income
     try:
