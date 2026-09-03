@@ -32,6 +32,8 @@ def obtain_equity_query():
     response = requests.get(url_equity_query)
     soup = BeautifulSoup(response.content, 'html.parser')
     industry_data = {}
+    financial_services_data = {}
+    non_financial_services_data = {}
     table = soup.find(id='id2')
     odd_rows = table.find_all(class_='row-odd')
     for row in odd_rows:
@@ -45,4 +47,10 @@ def obtain_equity_query():
         sector, industry = text.split(':', 1)
         industry_data[sector] = [x.strip() for x in industry.split(',')]
 
-    return industry_data
+    for sector, industries in industry_data.items():
+        if sector == 'Financial Services':
+            financial_services_data[sector] = industries
+        else:
+            non_financial_services_data[sector] = industries
+
+    return financial_services_data, non_financial_services_data
