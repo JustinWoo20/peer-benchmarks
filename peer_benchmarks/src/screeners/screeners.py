@@ -12,5 +12,4 @@ def screen_by_industry(industry):
         stocks = [d['symbol'] for d in data]
         return stocks
     except ValueError:
-        print(f'{industry} is not available')
         return None
