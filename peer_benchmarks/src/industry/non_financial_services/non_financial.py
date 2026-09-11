@@ -75,7 +75,7 @@ def pe_ratios(ticker):
     info = ticker.info
 
     net_income = None
-    for col in ('NetIncome', 'NetIncomeCommonStockholders', 'netincomeToCommon'):
+    for col in ('NetIncome', 'NetIncomeCommonStockholders', 'NetIncomeToCommon'):
         if col in income_statement.columns:
             net_income = income_statement[col].iloc[0]
             break
