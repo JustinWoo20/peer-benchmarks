@@ -3,7 +3,6 @@ import pandas as pd
 from yfinance import ticker
 from peer_benchmarks.src.screeners.screeners import screen_by_industry
 import random
-# P/B industry market cap / industry equity
 
 screener_results = screen_by_industry('Asset Management')
 stock_picks = random.sample(screener_results, 3)
