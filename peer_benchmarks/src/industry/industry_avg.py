@@ -8,9 +8,10 @@ import yfinance as yf
 
 # Get current year
 current_year = date.today().year
+current_month = date.today().month
 
 # Open SQLite connection
-conn = sql.connect(PEER_BENCHMARKS / f"peer_benchmarks_{current_year}.db")
+conn = sql.connect(PEER_BENCHMARKS / f"peer_benchmarks_{current_year}_{current_month}.db")
 
 # Obtain companies in each industry in major American stock exchanges
 industries_scraped = web_scraper.obtain_equity_query()

@@ -1,6 +1,6 @@
-import yfinance as yf
+import numpy as np
 import pandas as pd
-from yfinance import ticker
+import yfinance as yf
 from peer_benchmarks.src.screeners.screeners import screen_by_industry
 import random
 
@@ -107,7 +107,31 @@ def get_pe_ratios(income_statement, t_info):
     else:
         return market_cap, net_income, f_pe
 
+def calculate_pb(market_cap, equity):
+    return round(market_cap / equity,2)
 
+def calculate_de(debt, equity):
+    return round(debt / equity, 2)
+
+def calculate_revenue_growth(revenue, previous):
+    revenue_growth = (revenue / previous) - 1
+    return round(revenue_growth, 2)
+
+def calculate_roe(revenue, equity):
+    return round(revenue / equity, 2)
+
+def calculate_ttm_pe(market_cap, net_income):
+    if net_income == 0:
+        return 0
+    else:
+        ttm_pe = market_cap / net_income
+        return round(ttm_pe, 2)
+
+def calculate_forward_pe(f_pe_list):
+    median_pe = np.median(f_pe_list)
+    return median_pe
+
+industry_averages = {}
 for s in stock_picks:
     # Running totals
     industry_market_cap = 0
@@ -141,5 +165,10 @@ for s in stock_picks:
     industry_net_income += com_net_income
     industry_f_pe.append(com_f_pe)
 
-
-
+    # Calculations
+    industry_pb = calculate_pb(market_cap=industry_market_cap, equity=industry_shareholder_equity)
+    industry_de = calculate_de(debt=industry_total_debt, equity=industry_shareholder_equity)
+    industry_revenue_growth = calculate_revenue_growth(revenue=industry_recent_revenue, previous=industry_previous_revenue)
+    industry_roe = calculate_roe(revenue=industry_recent_revenue, equity=industry_shareholder_equity)
+    industry_ttm_pe = calculate_ttm_pe(market_cap=industry_pe_market_cap, net_income=industry_net_income)
+    industry_forward_pe = calculate_forward_pe(f_pe_list=industry_f_pe)
