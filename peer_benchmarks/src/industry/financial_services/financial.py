@@ -33,7 +33,6 @@ def get_market_cap(ticker_info):
         market_cap = shares_outstanding * current_price
     return market_cap
 
-
 def get_shareholder_equity(balance_sheet):
     # Returns the most recent shareholder equity value from the balance sheet
     if balance_sheet is None:
@@ -122,12 +121,14 @@ def calculate_ttm_pe(market_cap, net_income):
         return round(ttm_pe, 2)
 
 def calculate_forward_pe(f_pe_list):
-    median_pe = np.median(f_pe_list)
+    # Clean forward pe list and find the median
+    forward_pe_cleaned = [x for x in f_pe_list if x != 0]
+    median_pe = np.median(forward_pe_cleaned)
     return median_pe
 
 def calculate_f_benchmarks(ind_stock_dict):
     industry_values = {}
-    for ind, s in ind_stock_dict.items():
+    for ind, stocks in ind_stock_dict.items():
         # Running totals
         industry_market_cap = 0
         industry_shareholder_equity = 0
@@ -138,27 +139,28 @@ def calculate_f_benchmarks(ind_stock_dict):
         industry_net_income = 0
         industry_f_pe = []
 
-        # Retrieve values from financial statements
-        t = get_yf_ticker(s)
-        income_s, balance_s, cash_f, stock_info = get_financial_statements(t)
-        # Market cap
-        com_market_cap = get_market_cap(ticker_info=stock_info)
-        industry_market_cap += com_market_cap
-        # Shareholder's equity for P/B and RoE
-        com_shareholder_equity = get_shareholder_equity(balance_sheet=balance_s)
-        industry_shareholder_equity += com_shareholder_equity
-        # Total debt for debt to equity ratio
-        com_total_debt = get_total_debt(balance_sheet=balance_s)
-        industry_total_debt += com_total_debt
-        # Revenue for revenue growth and RoE
-        com_recent_rev, com_previous_revenue = get_revenue(income_statement=income_s)
-        industry_recent_revenue += com_recent_rev
-        industry_previous_revenue += com_previous_revenue
-        # Market cap for pe calculations, net income, and forward P/E estimates
-        com_pe_market_cap, com_net_income, com_f_pe = get_pe_ratios(income_statement=income_s, t_info=stock_info)
-        industry_pe_market_cap += com_pe_market_cap
-        industry_net_income += com_net_income
-        industry_f_pe.append(com_f_pe)
+        for s in stocks:
+            # Retrieve values from financial statements
+            t = get_yf_ticker(s)
+            income_s, balance_s, cash_f, stock_info = get_financial_statements(t)
+            # Market cap
+            com_market_cap = get_market_cap(ticker_info=stock_info)
+            industry_market_cap += com_market_cap
+            # Shareholder's equity for P/B and RoE
+            com_shareholder_equity = get_shareholder_equity(balance_sheet=balance_s)
+            industry_shareholder_equity += com_shareholder_equity
+            # Total debt for debt to equity ratio
+            com_total_debt = get_total_debt(balance_sheet=balance_s)
+            industry_total_debt += com_total_debt
+            # Revenue for revenue growth and RoE
+            com_recent_rev, com_previous_revenue = get_revenue(income_statement=income_s)
+            industry_recent_revenue += com_recent_rev
+            industry_previous_revenue += com_previous_revenue
+            # Market cap for pe calculations, net income, and forward P/E estimates
+            com_pe_market_cap, com_net_income, com_f_pe = get_pe_ratios(income_statement=income_s, t_info=stock_info)
+            industry_pe_market_cap += com_pe_market_cap
+            industry_net_income += com_net_income
+            industry_f_pe.append(com_f_pe)
 
         # Calculations
         industry_pb = calculate_pb(market_cap=industry_market_cap, equity=industry_shareholder_equity)
