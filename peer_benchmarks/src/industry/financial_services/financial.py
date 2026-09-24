@@ -109,9 +109,9 @@ def get_net_income(income_statement):
 #----------------------------------------------------------------------------------------------------------------------
 
 #----------------------------------------------Match metrics to ensure accurate computation----------------------------
-def get_pb_ratio_inputs(balance_sheet, stock_info):
+def get_pb_ratio_inputs(balance_sheet, ticker_info):
     # industry market cap / industry equity
-    com_market_cap = get_market_cap(stock_info)
+    com_market_cap = get_market_cap(ticker_info)
     com_equity = get_equity(balance_sheet)
 
     if com_market_cap is None or com_equity is None:
@@ -173,8 +173,8 @@ def get_roe_inputs(income_statement, balance_sheet):
 
 def calculate_roe(roe_pairs):
     # Industry net income / industry equity
-    net_income_sum = sum(ni for ni, _ in roe_tuple)
-    equity_sum = sum(equity for equity, _ in roe_tuple)
+    net_income_sum = sum(ni for ni, _ in roe_pairs)
+    equity_sum = sum(equity for equity, _ in roe_pairs)
 
     return round(net_income_sum / equity_sum, 2)
 
@@ -230,7 +230,7 @@ def calculate_benchmarks(sect_ind_stock_dict):
                 yf_ticker = get_yf_ticker(stock)
                 income, balance, cash, stock_info = get_financial_statements(yf_ticker=yf_ticker)
                 # Append each tuple to a list
-                pb_ratio_inputs = get_pb_ratio_inputs(balance_sheet=balance, stock_info=stock_info)
+                pb_ratio_inputs = get_pb_ratio_inputs(balance_sheet=balance, ticker_info=stock_info)
                 pb_list.append(pb_ratio_inputs)
                 de_ratio_inputs = get_de_ratio_inputs(balance_sheet=balance)
                 de_list.append(de_ratio_inputs)
@@ -240,7 +240,7 @@ def calculate_benchmarks(sect_ind_stock_dict):
                 gross_margin_list.append(gross_margin_inputs)
                 roe_inputs = get_roe_inputs(income_statement=income, balance_sheet=balance)
                 roe_list.append(roe_inputs)
-                ttm_pe_inputs = get_ttm_pe_inputs(ticker_info=yf_ticker, income_statement=income)
+                ttm_pe_inputs = get_ttm_pe_inputs(ticker_info=stock_info, income_statement=income)
                 ttm_pe_list.append(ttm_pe_inputs)
                 forward_pe_inputs = get_forward_pe(ticker_info=stock_info)
                 forward_pe_list.append(forward_pe_inputs)

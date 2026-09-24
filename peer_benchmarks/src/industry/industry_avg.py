@@ -2,6 +2,7 @@ from datetime import date
 import sqlite3 as sql
 from peer_benchmarks.src.web_scraping import web_scraper
 from peer_benchmarks.src.screeners.screeners import screen_by_industry
+from financial_services.financial import calculate_benchmarks
 from peer_benchmarks.config import PEER_BENCHMARKS
 
 # Get current year
@@ -40,7 +41,8 @@ for sector, industries in industries_scraped.items():
     screener_results[sector] = inner_dict
 
 # Calculate benchmarks
-# calculate_benchmakrs(screener_results)
+calculate_benchmarks(screener_results)
+
 # Financial services industries
 # calculate_f_benchmarks(industry_stock_dict=financial_services_industries)
 #
