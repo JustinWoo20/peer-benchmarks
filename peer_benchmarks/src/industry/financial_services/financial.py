@@ -11,6 +11,13 @@ def safe_transpose(df):
         return None
     return df.transpose()
 
+def check_null_values(input_tuple):
+    # Use in calculate benchmark function to check if tuple will be appended
+    if input_tuple is None:
+        return False
+    return all(value is not None and not np.isnan(value) for value in input_tuple)
+# -------------------------------Obtain financial statements-----------------------------------------------------------
+
 def get_financial_statements(yf_ticker):
     # Obtain the most recent financial statements for a company
     income_statement = yf_ticker.get_income_stmt()
@@ -21,6 +28,8 @@ def get_financial_statements(yf_ticker):
     cash_t = safe_transpose(cash_flow)
     info = yf_ticker.info
     return income_t, balance_t, cash_t, info
+
+# ------------------------------------------------------------------------------------------------------------------------
 
 # ------------------------------------Retrieve values from financial statements-----------------------------------------
 def get_market_cap(ticker_info):
@@ -218,6 +227,7 @@ def calculate_benchmarks(sect_ind_stock_dict):
     industry_values = {}
     for sector, industries in sect_ind_stock_dict.items():
         for ind, stock_list in industries.items():
+            print(f"Now working on {ind}")
             # Blank list for storing inputs
             pb_list = []
             de_list = []
@@ -227,23 +237,45 @@ def calculate_benchmarks(sect_ind_stock_dict):
             ttm_pe_list = []
             forward_pe_list = []
             for stock in stock_list:
+                print(f"Working on {stock}")
                 yf_ticker = get_yf_ticker(stock)
                 income, balance, cash, stock_info = get_financial_statements(yf_ticker=yf_ticker)
                 # Append each tuple to a list
                 pb_ratio_inputs = get_pb_ratio_inputs(balance_sheet=balance, ticker_info=stock_info)
-                pb_list.append(pb_ratio_inputs)
+                check = check_null_values(pb_ratio_inputs)
+                if check:
+                    pb_list.append(pb_ratio_inputs)
+
                 de_ratio_inputs = get_de_ratio_inputs(balance_sheet=balance)
-                de_list.append(de_ratio_inputs)
+                check = check_null_values(de_ratio_inputs)
+                if check:
+                    de_list.append(de_ratio_inputs)
+
                 revenue_growth_inputs = get_rev_growth_inputs(income_statement=income)
-                revenue_growth_list.append(revenue_growth_inputs)
+                check = check_null_values(revenue_growth_inputs)
+                if check:
+                    revenue_growth_list.append(revenue_growth_inputs)
+
                 gross_margin_inputs = get_gross_margin_inputs(income_statement=income)
-                gross_margin_list.append(gross_margin_inputs)
+                check = check_null_values(gross_margin_inputs)
+                if check:
+                    print(gross_margin_inputs)
+                    gross_margin_list.append(gross_margin_inputs)
+
                 roe_inputs = get_roe_inputs(income_statement=income, balance_sheet=balance)
-                roe_list.append(roe_inputs)
+                check = check_null_values(roe_inputs)
+                if check:
+                    roe_list.append(roe_inputs)
+
                 ttm_pe_inputs = get_ttm_pe_inputs(ticker_info=stock_info, income_statement=income)
-                ttm_pe_list.append(ttm_pe_inputs)
+                check = check_null_values(ttm_pe_inputs)
+                if check:
+                    ttm_pe_list.append(ttm_pe_inputs)
+
                 forward_pe_inputs = get_forward_pe(ticker_info=stock_info)
-                forward_pe_list.append(forward_pe_inputs)
+                if forward_pe_inputs is not None:
+                    forward_pe_list.append(forward_pe_inputs)
+
             # Calculate metrics
             pb_industry = calculate_pb_ratio(mc_equity_pairs=pb_list)
             de_industry = calculate_de_ratio(debt_equity_pairs=de_list)
@@ -268,3 +300,9 @@ def calculate_benchmarks(sect_ind_stock_dict):
 
     print(industry_values)
     return industry_values
+
+screener_results = {'Basic Materials': {'Agricultural Inputs':
+                                            ['UAN', 'SMG', 'SEED', 'NXTS', 'NTR', 'MOS', 'IPI', 'ICL', 'FMC', 'CTVA',
+                                             'CTA-PB', 'CTA-PA', 'CF', 'BIOX', 'AVD'],}}
+                                        #'Aluminum': ['KALU', 'CSTM', 'CENX', 'AA'], 'Building Materials': ['VMC', 'USLM', 'TTAM', 'TGLS', 'SMID', 'RETO', 'MLM', 'LOMA', 'KNF', 'JHX', 'EXP', 'CX', 'CRH', 'CPAC', 'CAPS', 'AMRZ'], 'Chemicals': ['WLKP', 'VHI', 'TROX', 'RYAM', 'REX', 'OLN', 'NPT', 'MEOH', 'LXU', 'HUN', 'GURE', 'GPRE', 'DOW', 'CE', 'BAK', 'ASIX'], 'Coking Coal': ['SXC', 'METCB', 'METC', 'HCC', 'AMR'], 'Copper': ['TGB', 'TECK', 'SCCO', 'IE', 'HBM', 'FCX', 'ERO', 'COPR'], 'Gold': ['WPM', 'VGZ', 'USAU', 'TRX', 'THM', 'SSRM', 'SGLD', 'SA', 'RGLD', 'PZG', 'PAAS', 'OR', 'OGG', 'OGC', 'NG', 'NFGC', 'NEM', 'NAMMW', 'MINE', 'MAKO', 'KGC', 'IDR', 'IAUX', 'IAG', 'HYMC', 'HMY', 'GROY', 'GORO', 'GLDG', 'GFI', 'GAU', 'FURY', 'FSM', 'FNV', 'EQX', 'ELE', 'EGO', 'DRD', 'DC', 'CTGO', 'CNL', 'CMCL', 'CGAU', 'CDE', 'BTG', 'BGLWW', 'B', 'AUXX', 'AUST', 'AUGO', 'AU', 'ARIS', 'AGI', 'AEM', 'AAUC'], 'Lumber & Wood Production': ['WFG', 'UFPI', 'SSD', 'NWGL', 'JCTC', 'BCC'], 'Other Industrial Metals & Mining': ['XPL', 'WWR', 'WRN', 'VZLA', 'VALE', 'USGO', 'USAS', 'UAMY', 'TREO', 'TMQ', 'TMCR', 'TMC', 'TII', 'SSMR', 'SLI', 'SKE', 'SGML', 'SCZM', 'SBMT', 'RML', 'RIO', 'REA', 'OMEX', 'NVA', 'NMG', 'NIOBW', 'NICM', 'NEXM', 'NEXA', 'NAK', 'MTRN', 'MP', 'LZM', 'LGO', 'LAR', 'LAC', 'IPX', 'IONR', 'IMC', 'GSM', 'GRO', 'FNUC', 'FMSTW', 'FMST', 'ELVR', 'ELBM', 'CRMLW', 'CMP', 'CHNR', 'BMM', 'BHP', 'ATLX', 'ATCX', 'ALOY', 'ALM'], 'Other Precious Metals & Mining': ['VOXR', 'VMET', 'TFPM', 'SLSR', 'SIND', 'SBSW', 'PPTA', 'PLG', 'MUX', 'MTA', 'LODE', 'ITRG', 'HL', 'GRML', 'GMTL', 'BVN', 'ASM'], 'Paper & Paper Products': ['SUZ', 'SLVM', 'MERC', 'ITP', 'CLW'], 'Silver': ['SVM', 'NEWP', 'HSLV', 'EXK', 'AYA', 'AG'], 'Specialty Chemicals': ['YMAT', 'WLK', 'WDFC', 'SXT', 'STDN', 'SSL', 'SQM', 'SOLS', 'SNES', 'SHW', 'SCL', 'RPM', 'PRM', 'PPG', 'OEC', 'ODC', 'NGVT', 'NEU', 'MTX', 'MNTK', 'MATV', 'LYB', 'LWLG', 'LIN', 'KWR', 'KRO', 'KOP', 'IOSP', 'IFF', 'HWKN', 'HDSN', 'GEVO', 'FUL', 'FSI', 'FF', 'FEAM', 'ESI', 'EMN', 'ECVT', 'ECL', 'DD', 'CNEY', 'CMT', 'CLMT', 'CITR', 'CC', 'CBT', 'BON', 'BGLC', 'BCPC', 'AXTA', 'AVNT', 'ASPN', 'ASPI', 'ASH', 'APD', 'ALTO', 'ALB-PA', 'ALB'], 'Steel': ['ZKIN', 'WS', 'TX', 'STLD', 'SIM', 'SID', 'RS', 'PKX', 'NWPX', 'NUE', 'MTUS', 'MT', 'MSB', 'LUD', 'INHD', 'HUDI', 'HLP', 'GGB', 'FRD', 'CLF']}}
+calculate_benchmarks(screener_results)

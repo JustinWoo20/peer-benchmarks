@@ -179,12 +179,13 @@ def calculate_nf_benchmarks(industry_stock_dict):
         industry_forward_pe = calculate_forward_pe(f_pe_list=industry_f_pe)
 
         # Create dictionary
-        new_row = {'pb_ratio': industry_pb,
-                   'de_ratio': industry_de,
-                   'revenue_growth': industry_rev_growth,
-                   'gross_margin': industry_gross_margin,
-                   'trailingPE': industry_ttm_pe,
-                   'forwardPE': industry_forward_pe,}
+        new_row = {'Industry': ind,
+                   'PB_Ratio': industry_pb,
+                   'DE_Ratio': industry_de,
+                   'Revenue_Growth': industry_rev_growth,
+                   'Gross_Margin': industry_gross_margin,
+                   'TTM_PE': industry_ttm_pe,
+                   'Forward_PE': industry_forward_pe,}
         print(new_row)
 
         industry_values[ind] = new_row

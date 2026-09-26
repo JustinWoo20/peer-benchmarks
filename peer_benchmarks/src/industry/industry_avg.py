@@ -39,9 +39,9 @@ for sector, industries in industries_scraped.items():
         if stock_list:
             inner_dict[i] = stock_list
     screener_results[sector] = inner_dict
-
+print(screener_results)
 # Calculate benchmarks
-calculate_benchmarks(screener_results)
+# calculate_benchmarks(screener_results)
 
 # Financial services industries
 # calculate_f_benchmarks(industry_stock_dict=financial_services_industries)
