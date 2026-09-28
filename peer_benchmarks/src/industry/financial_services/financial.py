@@ -74,16 +74,16 @@ def get_total_debt(balance_sheet):
 def get_revenue(income_statement):
     # Retrieves most recent year's revenue and previous year's
     if income_statement is None:
-        return None
+        return None, None
     if 'TotalRevenue' in income_statement.columns:
         revenue_series = income_statement.get('TotalRevenue')
     elif 'Revenue' in income_statement.columns:
         revenue_series = income_statement.get('Revenue')
     else:
-        return None
+        return None, None
 
     if len(revenue_series) < 2:
-        return None
+        return None, None
 
     recent_revenue = revenue_series.iloc[0]
     previous_revenue = revenue_series.iloc[1]
@@ -303,6 +303,45 @@ def calculate_benchmarks(sect_ind_stock_dict):
 
 screener_results = {'Basic Materials': {'Agricultural Inputs':
                                             ['UAN', 'SMG', 'SEED', 'NXTS', 'NTR', 'MOS', 'IPI', 'ICL', 'FMC', 'CTVA',
-                                             'CTA-PB', 'CTA-PA', 'CF', 'BIOX', 'AVD'],}}
-                                        #'Aluminum': ['KALU', 'CSTM', 'CENX', 'AA'], 'Building Materials': ['VMC', 'USLM', 'TTAM', 'TGLS', 'SMID', 'RETO', 'MLM', 'LOMA', 'KNF', 'JHX', 'EXP', 'CX', 'CRH', 'CPAC', 'CAPS', 'AMRZ'], 'Chemicals': ['WLKP', 'VHI', 'TROX', 'RYAM', 'REX', 'OLN', 'NPT', 'MEOH', 'LXU', 'HUN', 'GURE', 'GPRE', 'DOW', 'CE', 'BAK', 'ASIX'], 'Coking Coal': ['SXC', 'METCB', 'METC', 'HCC', 'AMR'], 'Copper': ['TGB', 'TECK', 'SCCO', 'IE', 'HBM', 'FCX', 'ERO', 'COPR'], 'Gold': ['WPM', 'VGZ', 'USAU', 'TRX', 'THM', 'SSRM', 'SGLD', 'SA', 'RGLD', 'PZG', 'PAAS', 'OR', 'OGG', 'OGC', 'NG', 'NFGC', 'NEM', 'NAMMW', 'MINE', 'MAKO', 'KGC', 'IDR', 'IAUX', 'IAG', 'HYMC', 'HMY', 'GROY', 'GORO', 'GLDG', 'GFI', 'GAU', 'FURY', 'FSM', 'FNV', 'EQX', 'ELE', 'EGO', 'DRD', 'DC', 'CTGO', 'CNL', 'CMCL', 'CGAU', 'CDE', 'BTG', 'BGLWW', 'B', 'AUXX', 'AUST', 'AUGO', 'AU', 'ARIS', 'AGI', 'AEM', 'AAUC'], 'Lumber & Wood Production': ['WFG', 'UFPI', 'SSD', 'NWGL', 'JCTC', 'BCC'], 'Other Industrial Metals & Mining': ['XPL', 'WWR', 'WRN', 'VZLA', 'VALE', 'USGO', 'USAS', 'UAMY', 'TREO', 'TMQ', 'TMCR', 'TMC', 'TII', 'SSMR', 'SLI', 'SKE', 'SGML', 'SCZM', 'SBMT', 'RML', 'RIO', 'REA', 'OMEX', 'NVA', 'NMG', 'NIOBW', 'NICM', 'NEXM', 'NEXA', 'NAK', 'MTRN', 'MP', 'LZM', 'LGO', 'LAR', 'LAC', 'IPX', 'IONR', 'IMC', 'GSM', 'GRO', 'FNUC', 'FMSTW', 'FMST', 'ELVR', 'ELBM', 'CRMLW', 'CMP', 'CHNR', 'BMM', 'BHP', 'ATLX', 'ATCX', 'ALOY', 'ALM'], 'Other Precious Metals & Mining': ['VOXR', 'VMET', 'TFPM', 'SLSR', 'SIND', 'SBSW', 'PPTA', 'PLG', 'MUX', 'MTA', 'LODE', 'ITRG', 'HL', 'GRML', 'GMTL', 'BVN', 'ASM'], 'Paper & Paper Products': ['SUZ', 'SLVM', 'MERC', 'ITP', 'CLW'], 'Silver': ['SVM', 'NEWP', 'HSLV', 'EXK', 'AYA', 'AG'], 'Specialty Chemicals': ['YMAT', 'WLK', 'WDFC', 'SXT', 'STDN', 'SSL', 'SQM', 'SOLS', 'SNES', 'SHW', 'SCL', 'RPM', 'PRM', 'PPG', 'OEC', 'ODC', 'NGVT', 'NEU', 'MTX', 'MNTK', 'MATV', 'LYB', 'LWLG', 'LIN', 'KWR', 'KRO', 'KOP', 'IOSP', 'IFF', 'HWKN', 'HDSN', 'GEVO', 'FUL', 'FSI', 'FF', 'FEAM', 'ESI', 'EMN', 'ECVT', 'ECL', 'DD', 'CNEY', 'CMT', 'CLMT', 'CITR', 'CC', 'CBT', 'BON', 'BGLC', 'BCPC', 'AXTA', 'AVNT', 'ASPN', 'ASPI', 'ASH', 'APD', 'ALTO', 'ALB-PA', 'ALB'], 'Steel': ['ZKIN', 'WS', 'TX', 'STLD', 'SIM', 'SID', 'RS', 'PKX', 'NWPX', 'NUE', 'MTUS', 'MT', 'MSB', 'LUD', 'INHD', 'HUDI', 'HLP', 'GGB', 'FRD', 'CLF']}}
+                                             'CTA-PB', 'CTA-PA', 'CF', 'BIOX', 'AVD'],
+                                        'Aluminum': ['KALU', 'CSTM', 'CENX', 'AA'],
+                                        'Building Materials': ['VMC', 'USLM', 'TTAM', 'TGLS', 'SMID', 'RETO', 'MLM',
+                                                               'LOMA', 'KNF', 'JHX', 'EXP', 'CX', 'CRH', 'CPAC',
+                                                               'CAPS', 'AMRZ'],
+                                        'Chemicals': ['WLKP', 'VHI', 'TROX', 'RYAM', 'REX', 'OLN', 'NPT', 'MEOH', 'LXU',
+                                                      'HUN', 'GURE', 'GPRE', 'DOW', 'CE', 'BAK', 'ASIX'],
+                                        'Coking Coal': ['SXC', 'METCB', 'METC', 'HCC', 'AMR'],
+                                        'Copper': ['TGB', 'TECK', 'SCCO', 'IE', 'HBM', 'FCX', 'ERO', 'COPR'],
+                                        'Gold': ['WPM', 'VGZ', 'USAU', 'TRX', 'THM', 'SSRM', 'SGLD', 'SA', 'RGLD',
+                                                 'PZG', 'PAAS', 'OR', 'OGG', 'OGC', 'NG', 'NFGC', 'NEM', 'NAMMW',
+                                                 'MINE', 'MAKO', 'KGC', 'IDR', 'IAUX', 'IAG', 'HYMC', 'HMY', 'GROY',
+                                                 'GORO', 'GLDG', 'GFI', 'GAU', 'FURY', 'FSM', 'FNV', 'EQX', 'ELE',
+                                                 'EGO', 'DRD', 'DC', 'CTGO', 'CNL', 'CMCL', 'CGAU', 'CDE', 'BTG',
+                                                 'BGLWW', 'B', 'AUXX', 'AUST', 'AUGO', 'AU', 'ARIS', 'AGI', 'AEM', 'AAUC'],
+                                        'Lumber & Wood Production': ['WFG', 'UFPI', 'SSD', 'NWGL', 'JCTC', 'BCC'],
+                                        'Other Industrial Metals & Mining': ['XPL', 'WWR', 'WRN', 'VZLA', 'VALE',
+                                                                             'USGO', 'USAS', 'UAMY', 'TREO', 'TMQ',
+                                                                             'TMCR', 'TMC', 'TII', 'SSMR', 'SLI', 'SKE',
+                                                                             'SGML', 'SCZM', 'SBMT', 'RML', 'RIO', 'REA',
+                                                                             'OMEX', 'NVA', 'NMG', 'NIOBW', 'NICM', 'NEXM',
+                                                                             'NEXA', 'NAK', 'MTRN', 'MP', 'LZM', 'LGO',
+                                                                             'LAR', 'LAC', 'IPX', 'IONR', 'IMC', 'GSM',
+                                                                             'GRO', 'FNUC', 'FMSTW', 'FMST', 'ELVR',
+                                                                             'ELBM', 'CRMLW', 'CMP', 'CHNR', 'BMM', 'BHP',
+                                                                             'ATLX', 'ATCX', 'ALOY', 'ALM'],
+                                        'Other Precious Metals & Mining': ['VOXR', 'VMET', 'TFPM', 'SLSR', 'SIND',
+                                                                           'SBSW', 'PPTA', 'PLG', 'MUX', 'MTA', 'LODE',
+                                                                           'ITRG', 'HL', 'GRML', 'GMTL', 'BVN', 'ASM'],
+                                        'Paper & Paper Products': ['SUZ', 'SLVM', 'MERC', 'ITP', 'CLW'],
+                                        'Silver': ['SVM', 'NEWP', 'HSLV', 'EXK', 'AYA', 'AG'],
+                                        'Specialty Chemicals': ['YMAT', 'WLK', 'WDFC', 'SXT', 'STDN', 'SSL',
+                                                                'SQM', 'SOLS', 'SNES', 'SHW', 'SCL', 'RPM', 'PRM', 'PPG',
+                                                                'OEC', 'ODC', 'NGVT', 'NEU', 'MTX', 'MNTK', 'MATV', 'LYB',
+                                                                'LWLG', 'LIN', 'KWR', 'KRO', 'KOP', 'IOSP', 'IFF',
+                                                                'HWKN', 'HDSN', 'GEVO', 'FUL', 'FSI', 'FF', 'FEAM',
+                                                                'ESI', 'EMN', 'ECVT', 'ECL', 'DD', 'CNEY', 'CMT', 'CLMT',
+                                                                'CITR', 'CC', 'CBT', 'BON', 'BGLC', 'BCPC', 'AXTA', 'AVNT',
+                                                                'ASPN', 'ASPI', 'ASH', 'APD', 'ALTO', 'ALB-PA', 'ALB'],
+                                        'Steel': ['ZKIN', 'WS', 'TX', 'STLD', 'SIM', 'SID', 'RS', 'PKX', 'NWPX', 'NUE',
+                                                  'MTUS', 'MT', 'MSB', 'LUD', 'INHD', 'HUDI', 'HLP', 'GGB', 'FRD', 'CLF']}}
 calculate_benchmarks(screener_results)
