@@ -3,7 +3,7 @@ import sqlite3 as sql
 import time
 from peer_benchmarks.src.web_scraping import web_scraper
 from peer_benchmarks.src.screeners.screeners import screen_by_industry
-from calculator.calculator import calculate_benchmarks
+from industry_calculator.calculator import calculate_benchmarks
 from peer_benchmarks.config import PEER_BENCHMARKS
 
 # Get current year
