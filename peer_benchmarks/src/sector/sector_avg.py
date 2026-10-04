@@ -1,157 +1,56 @@
-import numpy as np
-from peer_benchmarks.src.web_scraping import web_scraper
-from peer_benchmarks.src.screeners.screeners import screen_by_industry
+from datetime import date
 import sqlite3 as sql
-import yfinance as yf
+import time
+from peer_benchmarks.src.web_scraping import web_scraper
+from peer_benchmarks.src.screeners.screeners import screen_by_sector
+from peer_benchmarks.src.sector.sector_calculator.calculator import calculate_benchmarks
+from peer_benchmarks.config import PEER_BENCHMARKS
 
-# conn = sql.connect('../../../../data/peer-benchmarks/db/industry_averages.db')
-# cur = conn.cursor()
-#
-# cur.execute("""DROP TABLE IF EXISTS industry_averages""")
-# cur.execute("""CREATE TABLE IF NOT EXISTS industry_averages (
-#             Industry TEXT NOT NULL,
-#             pb_ratio FLOAT NOT NULL,
-#             de_ratio FLOAT NOT NULL,
-#             revenue_growth FLOAT NOT NULL,
-#             gross_profit FLOAT NOT NULL,
-#             ttmpe FLOAT NOT NULL,
-#             forwardpe FLOAT NOT NULL,
-#             net_profit FLOAT NOT NULL,""")
+# Get current year
+current_year = date.today().year
+current_month = date.today().month
 
-def get_yf_ticker(ticker):
-    t = yf.Ticker(ticker)
-    return t
+# Open SQLite connection
+conn = sql.connect(PEER_BENCHMARKS / f"peer_benchmarks_{current_year}_{current_month}.db")
+cur = conn.cursor()
+# Drop tables if they exists
+cur.execute("DROP TABLE IF EXISTS sectors")
+# Create new tables for most recent values
+cur.execute("""CREATE TABLE industries
+            (Industry TEXT NOT NULL,
+            Sector TEXT NOT NULL,
+            PB_Ratio REAL,
+            DE_Ratio REAL,
+            RoE REAL,
+            Revenue_Growth REAL,
+            Gross_Margin REAL,
+            TTM_PE REAL,
+            Forward_PE)""")
 
-def get_market_cap(ticker):
-    info = ticker.info
-    market_cap = info.get('marketCap') or info.get('nonDilutedMarketCap')
-    if market_cap is None:
-        shares_outstanding = info.get('sharesOutstanding') or info.get('floatShares')
-        current_price = info.get('currentPrice')
-        if current_price is None or shares_outstanding is None:
-            return None
-        market_cap = shares_outstanding * current_price
-    return market_cap
+# Obtain sector and industry dictionary
+industries_scraped = web_scraper.obtain_equity_query()
 
-def get_income_statistics(ticker):
-    income_statement = ticker.get_income_stmt()
-    income_transposed = income_statement.transpose()
-    revenue = income_transposed.get('TotalRevenue')
-    if revenue is None:
-        return None, None, None
-    elif len(revenue) < 2:
-        return None, None, None
-    else:
-        recent_revenue = revenue.iloc[0]
-        previous_revenue_in = revenue.iloc[1]
+# Create dictionary with stocks from industry screening
+# Screener results dictionary: {Sector: {Industry: [], Industry: []}, Sector:}
+screener_results = {}
+for sector, industries in industries_scraped.items():
+    inner_dict = {}
+    for i in industries:
+        stock_list = screen_by_sector(sector=sector)
+        time.sleep(2)
+        if stock_list:
+            inner_dict[i] = stock_list
+    screener_results[sector] = inner_dict
 
-    gp = income_transposed.get('GrossProfit')
-    if gp is None:
-        return recent_revenue, previous_revenue_in, 0
-    gp = gp.iloc[0]
-    return recent_revenue, previous_revenue_in, gp
+# Calculate benchmarks
+benchmarks = calculate_benchmarks(screener_results)
 
-def get_balance_statistics(ticker):
-    balance_sheet = ticker.get_balance_sheet()
-    balance_transposed = balance_sheet.transpose()
-    total_shareholder_equity = balance_transposed['StockholdersEquity'].iloc[0]
-    td = balance_transposed.get('TotalDebt')
-    if td is None:
-        return 0, 0
-    td = td.iloc[0]
-    return total_shareholder_equity, td
+cur.executemany("""
+    INSERT INTO industries
+    (Industry, Sector, PB_Ratio, DE_Ratio, RoE, Revenue_Growth, Gross_Margin, TTM_PE, Forward_PE)
+    VALUES (:Industry, :Sector, :PB_Ratio, :DE_Ratio, :RoE, :Revenue_Growth, :Gross_Margin, :TTM_PE, :Forward_PE)
+""", benchmarks)
 
-def pe_ratios(ticker):
-    income_statement = ticker.get_income_stmt()
-    info = ticker.info
-    income_transposed = income_statement.transpose()
-    net_income = income_transposed.get('NetIncome')
-    if net_income is None:
-        net_income = income_transposed.get('NetIncomeCommonStockholders')
-    net_income = net_income.iloc[0] if net_income is not None else None
-    market_cap = get_market_cap(ticker)
-    ttm_pe = market_cap / net_income
-    try:
-        f_pe = info['forwardPE']
-    except KeyError:
-        f_pe = 0
-    if ttm_pe > 0:
-        return market_cap, net_income, f_pe
-    else:
-        return 0, 0, f_pe
+conn.commit()
 
-
-# Obtain companies in each industry in major American stock exchanges
-screener_industries = web_scraper.obtain_equity_query()
-industry_stock_dict = {}
-delete_list = []
-for si in screener_industries.values():
-    for i in si:
-        stock_list = screen_by_industry(industry=i)
-        if stock_list is not None:
-            industry_stock_dict[i] = stock_list
-
-industry_values = {}
-for ind, stocks in industry_stock_dict.items():
-    print(f'Now working on {ind}')
-
-    industry_mc = 0
-    industry_equity = 0
-    industry_debt = 0
-    industry_revenue = 0
-    industry_previous_revenue = 0
-    industry_gross_profit = 0
-    # For P/E
-    industry_pe_mc = 0
-    industry_net_income = 0
-    industry_forward_pe = []
-    for s in stocks: # Find each respective company's market cap
-        print(f'Now working on {s}')
-        yf_ticker = get_yf_ticker(s)
-        # Find total market cap
-        mc = get_market_cap(yf_ticker)
-        if mc is None:
-            continue
-        industry_mc += mc
-        # Find most recent revenue and previous
-        total_revenue, previous_revenue, gross_profit = get_income_statistics(yf_ticker)
-        if total_revenue is None:
-            continue
-        industry_revenue += total_revenue
-        industry_previous_revenue += previous_revenue
-        # Gross Profit
-        industry_gross_profit += gross_profit
-        # Find most recent stockholder's equity
-        equity, total_debt = get_balance_statistics(yf_ticker)
-        industry_equity += equity
-        # Find total debt per industry
-        industry_debt += total_debt
-        # Trailing P/E and Forward P/E
-        pe_market_cap, pe_net_income, forward_pe = pe_ratios(yf_ticker)
-        industry_pe_mc += pe_market_cap
-        industry_net_income += pe_net_income
-        industry_forward_pe.append(forward_pe)
-
-    # Calculations
-    # P/B
-    industry_pb = industry_mc / industry_equity
-    industry_de = industry_debt / industry_equity
-    industry_rev_growth = (industry_revenue / industry_previous_revenue) - 1
-    industry_gross_margin = industry_gross_profit / industry_revenue
-    industry_ttm_pe = industry_pe_mc / industry_net_income
-
-    forward_pe_cleaned = [x for x in industry_forward_pe if x != 0] # Remove placeholder 0  values from Forward PE
-    median_forward_pe = np.median(forward_pe_cleaned)
-
-    # Create dictionary
-    new_row = {'pb_ratio': industry_pb,
-               'de_ratio': industry_de,
-               'revenue_growth': industry_rev_growth,
-               'gross_margin': industry_gross_margin,
-               'trailingPE': industry_ttm_pe,
-               'forwardPE': median_forward_pe,}
-    print(new_row)
-
-    industry_values[ind] = new_row
-
-print(industry_values)
+conn.close()
