@@ -17,8 +17,7 @@ cur = conn.cursor()
 cur.execute("DROP TABLE IF EXISTS sectors")
 # Create new tables for most recent values
 cur.execute("""CREATE TABLE industries
-            (Industry TEXT NOT NULL,
-            Sector TEXT NOT NULL,
+            (Sector TEXT NOT NULL,
             PB_Ratio REAL,
             DE_Ratio REAL,
             RoE REAL,
