@@ -31,16 +31,11 @@ cur.execute("""CREATE TABLE industries
 industries_scraped = web_scraper.obtain_equity_query()
 
 # Create dictionary with stocks from industry screening
-# Screener results dictionary: {Sector: {Industry: [], Industry: []}, Sector:}
+# Screener results dictionary: {Sector: [Stocks]}
 screener_results = {}
 for sector, industries in industries_scraped.items():
-    inner_dict = {}
-    for i in industries:
-        stock_list = screen_by_sector(sector=sector)
-        time.sleep(2)
-        if stock_list:
-            inner_dict[i] = stock_list
-    screener_results[sector] = inner_dict
+    stock_list = screen_by_sector(sector=sector)
+    screener_results[sector] = stock_list
 
 # Calculate benchmarks
 benchmarks = calculate_benchmarks(screener_results)
