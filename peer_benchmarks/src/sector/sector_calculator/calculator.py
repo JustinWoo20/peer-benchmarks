@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import numpy as np
-import pandas as pd
 import requests
 import time
 import yfinance as yf
@@ -74,10 +73,10 @@ def get_equity(balance_sheet, currency):
     shareholder_equity = shareholder_equity_series.iloc[0]
     if shareholder_equity < 0:
         return None
-
+    shareholder_equity *= currency
     return shareholder_equity
 
-def get_total_debt(balance_sheet):
+def get_total_debt(balance_sheet, currency):
     # Retrieves total debt from a company's balance sheet and returns None if not available
     if balance_sheet is None:
         return None
@@ -86,9 +85,10 @@ def get_total_debt(balance_sheet):
     else:
         return None
     total_debt = total_debt_series.iloc[0]
+    total_debt *= currency
     return total_debt
 
-def get_revenue(income_statement):
+def get_revenue(income_statement, currency):
     # Retrieves most recent year's revenue and previous year's
     if income_statement is None:
         return None, None
@@ -103,10 +103,12 @@ def get_revenue(income_statement):
         return None, None
 
     recent_revenue = revenue_series.iloc[0]
+    recent_revenue *= currency
     previous_revenue = revenue_series.iloc[1]
+    previous_revenue *= currency
     return recent_revenue, previous_revenue
 
-def get_gross_profit(income_statement):
+def get_gross_profit(income_statement, currency):
     if income_statement is None:
         return None
     if 'GrossProfit' in income_statement.columns:
@@ -115,9 +117,10 @@ def get_gross_profit(income_statement):
         return None
 
     gross_profit = gross_profit_series.iloc[0]
+    gross_profit *= currency
     return gross_profit
 
-def get_net_income(income_statement):
+def get_net_income(income_statement, currency):
     if income_statement is None:
         return None
     if 'NetIncome' in income_statement.columns:
@@ -130,15 +133,16 @@ def get_net_income(income_statement):
         return None
 
     net_income = net_income_series.iloc[0]
+    net_income *= currency
     return net_income
 
 #----------------------------------------------------------------------------------------------------------------------
 
 #----------------------------------------------Match metrics to ensure accurate computation----------------------------
-def get_pb_ratio_inputs(balance_sheet, ticker_info):
+def get_pb_ratio_inputs(balance_sheet, ticker_info, currency):
     # sector market cap / sector equity
     com_market_cap = get_market_cap(ticker_info)
-    com_equity = get_equity(balance_sheet)
+    com_equity = get_equity(balance_sheet=balance_sheet, currency=currency)
 
     if com_market_cap is None or com_equity is None:
         return None
@@ -152,10 +156,10 @@ def calculate_pb_ratio(mc_equity_pairs):
 
     return round(industry_mc_sum / industry_equity_sum, 2)
 
-def get_de_ratio_inputs(balance_sheet,):
+def get_de_ratio_inputs(balance_sheet, currency):
     # Industry total debt / industry equity
-    com_debt = get_total_debt(balance_sheet=balance_sheet)
-    com_equity = get_equity(balance_sheet=balance_sheet)
+    com_debt = get_total_debt(balance_sheet=balance_sheet, currency=currency)
+    com_equity = get_equity(balance_sheet=balance_sheet, currency=currency)
     pairs = (com_debt, com_equity)
     return pairs
 
@@ -165,9 +169,9 @@ def calculate_de_ratio(debt_equity_pairs):
     industry_equity = sum(equity for _, equity in debt_equity_pairs)
     return round(industry_debt_sum / industry_equity, 2)
 
-def get_rev_growth_inputs(income_statement):
+def get_rev_growth_inputs(income_statement, currency):
     # Recent / Previous - 1
-    revenue, previous = get_revenue(income_statement)
+    revenue, previous = get_revenue(income_statement=income_statement, currency=currency)
     pairs = (revenue, previous)
     return pairs
 
@@ -176,10 +180,10 @@ def calculate_rev_growth(revenue_pairs):
     previous_revenue_sum = sum(previous for _, previous in revenue_pairs)
     return round(current_total_revenue / previous_revenue_sum - 1, 2)
 
-def get_gross_margin_inputs(income_statement):
+def get_gross_margin_inputs(income_statement, currency):
     # Industry gross profit / industry revenue
-    revenue, previous = get_revenue(income_statement=income_statement)
-    com_gross_profit = get_gross_profit(income_statement=income_statement)
+    revenue, previous = get_revenue(income_statement=income_statement, currency=currency)
+    com_gross_profit = get_gross_profit(income_statement=income_statement, currency=currency)
     pairs = (com_gross_profit, revenue)
     return pairs
 
@@ -190,10 +194,10 @@ def calculate_gross_margin(revenue_margin_pairs):
     return round(gross_profit_sum / revenue_sum, 2)
 
 
-def get_roe_inputs(income_statement, balance_sheet):
+def get_roe_inputs(income_statement, balance_sheet, currency):
     # Industry net income / industry equity
-    com_net_income = get_net_income(income_statement=income_statement)
-    com_equity = get_equity(balance_sheet=balance_sheet)
+    com_net_income = get_net_income(income_statement=income_statement, currency=currency)
+    com_equity = get_equity(balance_sheet=balance_sheet, currency=currency)
     pairs = (com_net_income, com_equity)
     return pairs
 
@@ -204,10 +208,10 @@ def calculate_roe(roe_pairs):
 
     return round(net_income_sum / equity_sum, 2)
 
-def get_ttm_pe_inputs(ticker_info, income_statement):
+def get_ttm_pe_inputs(ticker_info, income_statement, currency):
     # market_cap / net_income
     com_market_cap = get_market_cap(ticker_info=ticker_info)
-    com_net_income = get_net_income(income_statement=income_statement)
+    com_net_income = get_net_income(income_statement=income_statement, currency=currency)
     pairs = (com_market_cap, com_net_income)
     return pairs
 
@@ -259,35 +263,36 @@ def calculate_benchmarks(sect_stock_dict):
         for ticker in stock_list:
             # Obtain ticker object and financial statements
             yf_ticker = get_yf_ticker(stock_symbol=ticker)
-            income, balance, cash, stock_info = get_financial_statements(yf_ticker=yf_ticker)
+            income, balance, cash, stock_info, exchange_rate = get_financial_statements(yf_ticker=yf_ticker,
+                                                                                        fx_rates=exchange_rates)
 
             # Append each tuple to a list
-            pb_ratio_inputs = get_pb_ratio_inputs(balance_sheet=balance, ticker_info=stock_info)
+            pb_ratio_inputs = get_pb_ratio_inputs(balance_sheet=balance, ticker_info=stock_info, currency=exchange_rate)
             check = check_null_values(pb_ratio_inputs)
             if check:
                 pb_list.append(pb_ratio_inputs)
 
-            de_ratio_inputs = get_de_ratio_inputs(balance_sheet=balance)
+            de_ratio_inputs = get_de_ratio_inputs(balance_sheet=balance, currency=exchange_rate)
             check = check_null_values(de_ratio_inputs)
             if check:
                 de_list.append(de_ratio_inputs)
 
-            revenue_growth_inputs = get_rev_growth_inputs(income_statement=income)
+            revenue_growth_inputs = get_rev_growth_inputs(income_statement=income, currency=exchange_rate)
             check = check_null_values(revenue_growth_inputs)
             if check:
                 revenue_growth_list.append(revenue_growth_inputs)
 
-            gross_margin_inputs = get_gross_margin_inputs(income_statement=income)
+            gross_margin_inputs = get_gross_margin_inputs(income_statement=income, currency=exchange_rate)
             check = check_null_values(gross_margin_inputs)
             if check:
                 gross_margin_list.append(gross_margin_inputs)
 
-            roe_inputs = get_roe_inputs(income_statement=income, balance_sheet=balance)
+            roe_inputs = get_roe_inputs(income_statement=income, balance_sheet=balance, currency=exchange_rate)
             check = check_null_values(roe_inputs)
             if check:
                 roe_list.append(roe_inputs)
 
-            ttm_pe_inputs = get_ttm_pe_inputs(ticker_info=stock_info, income_statement=income)
+            ttm_pe_inputs = get_ttm_pe_inputs(ticker_info=stock_info, income_statement=income, currency=exchange_rate)
             check = check_null_values(ttm_pe_inputs)
             if check:
                 ttm_pe_list.append(ttm_pe_inputs)
