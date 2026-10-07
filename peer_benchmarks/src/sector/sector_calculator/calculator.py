@@ -1,7 +1,17 @@
+from dotenv import load_dotenv
+import os
 import numpy as np
 import pandas as pd
+import requests
 import time
 import yfinance as yf
+
+load_dotenv()
+conversion_key = os.getenv("CURRENCY_KEY")
+conversion_url = f"https://v6.exchangerate-api.com/v6/{conversion_key}/latest/USD"
+conversion_response = requests.get(conversion_url)
+conversion_json = conversion_response.json()
+exchange_rates = conversion_json['conversion_rates']
 
 def get_yf_ticker(stock_symbol):
     return yf.Ticker(stock_symbol)
@@ -17,9 +27,10 @@ def check_null_values(input_tuple):
     if input_tuple is None:
         return False
     return all(value is not None and not np.isnan(value) for value in input_tuple)
+
 # -------------------------------Obtain financial statements-----------------------------------------------------------
 
-def get_financial_statements(yf_ticker):
+def get_financial_statements(yf_ticker, fx_rates):
     # Obtain the most recent financial statements for a company
     income_statement = yf_ticker.get_income_stmt()
     income_t = safe_transpose(income_statement)
@@ -28,9 +39,14 @@ def get_financial_statements(yf_ticker):
     cash_flow = yf_ticker.get_cash_flow()
     cash_t = safe_transpose(cash_flow)
     info = yf_ticker.info
-    return income_t, balance_t, cash_t, info
+    financial_currency = info.get('financialCurrency')
+    if financial_currency == 'USD':
+        return income_t, balance_t, cash_t, info, 1
+    else:
+        rate = fx_rates[financial_currency]
+        return income_t, balance_t, cash_t, rate
 
-# ------------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 # ------------------------------------Retrieve values from financial statements-----------------------------------------
 def get_market_cap(ticker_info):
@@ -44,7 +60,7 @@ def get_market_cap(ticker_info):
         market_cap = shares_outstanding * current_price
     return market_cap
 
-def get_equity(balance_sheet):
+def get_equity(balance_sheet, currency):
     # Obtain shareholder equity, returns none if not available
     if balance_sheet is None:
         return None
@@ -120,7 +136,7 @@ def get_net_income(income_statement):
 
 #----------------------------------------------Match metrics to ensure accurate computation----------------------------
 def get_pb_ratio_inputs(balance_sheet, ticker_info):
-    # industry market cap / industry equity
+    # sector market cap / sector equity
     com_market_cap = get_market_cap(ticker_info)
     com_equity = get_equity(balance_sheet)
 
@@ -130,7 +146,7 @@ def get_pb_ratio_inputs(balance_sheet, ticker_info):
     return pairs
 
 def calculate_pb_ratio(mc_equity_pairs):
-    # industry market cap / industry equity
+    # sector market cap / sector equity
     industry_mc_sum = sum(mc for mc, _ in mc_equity_pairs)
     industry_equity_sum = sum(equity for _, equity in mc_equity_pairs)
 
@@ -184,7 +200,7 @@ def get_roe_inputs(income_statement, balance_sheet):
 def calculate_roe(roe_pairs):
     # Industry net income / industry equity
     net_income_sum = sum(ni for ni, _ in roe_pairs)
-    equity_sum = sum(equity for equity, _ in roe_pairs)
+    equity_sum = sum(equity for _, equity in roe_pairs)
 
     return round(net_income_sum / equity_sum, 2)
 
@@ -241,9 +257,6 @@ def calculate_benchmarks(sect_stock_dict):
         forward_pe_list = []
 
         for ticker in stock_list:
-            print(f"Now working on {ticker}")
-            # Blank list for storing inputs
-
             # Obtain ticker object and financial statements
             yf_ticker = get_yf_ticker(stock_symbol=ticker)
             income, balance, cash, stock_info = get_financial_statements(yf_ticker=yf_ticker)
@@ -303,6 +316,7 @@ def calculate_benchmarks(sect_stock_dict):
                    'Gross_Margin': gross_margin_industry,
                    'TTM_PE': ttm_pe_industry,
                    'Forward_PE': forward_pe_industry,}
+        print(new_row)
 
         sector_values.append(new_row)
 

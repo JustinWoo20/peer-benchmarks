@@ -2,7 +2,7 @@
 .venv/
 
 # Environment variables
-.env
+peer_benchmarks/.env
 
 # PyCharm settings
 .idea/
