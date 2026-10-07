@@ -25,7 +25,7 @@ def calculate_sector_benchmarks():
                 Revenue_Growth REAL,
                 Gross_Margin REAL,
                 TTM_PE REAL,
-                Forward_PE)""")
+                Forward_PE REAL)""")
 
     # Obtain sector and industry dictionary
     industries_scraped = web_scraper.obtain_equity_query()
@@ -40,11 +40,10 @@ def calculate_sector_benchmarks():
 
     # Calculate benchmarks
     benchmarks = calculate_benchmarks(screener_results)
-
     cur.executemany("""
         INSERT INTO industries
-        (Industry, Sector, PB_Ratio, DE_Ratio, RoE, Revenue_Growth, Gross_Margin, TTM_PE, Forward_PE)
-        VALUES (:Industry, :Sector, :PB_Ratio, :DE_Ratio, :RoE, :Revenue_Growth, :Gross_Margin, :TTM_PE, :Forward_PE)
+        (Sector, PB_Ratio, DE_Ratio, RoE, Revenue_Growth, Gross_Margin, TTM_PE, Forward_PE)
+        VALUES (:Sector, :PB_Ratio, :DE_Ratio, :RoE, :Revenue_Growth, :Gross_Margin, :TTM_PE, :Forward_PE)
     """, benchmarks)
 
     conn.commit()
