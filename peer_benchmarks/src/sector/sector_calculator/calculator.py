@@ -11,6 +11,7 @@ conversion_url = f"https://v6.exchangerate-api.com/v6/{conversion_key}/latest/US
 conversion_response = requests.get(conversion_url)
 conversion_json = conversion_response.json()
 exchange_rates = conversion_json['conversion_rates']
+print(exchange_rates)
 
 def get_yf_ticker(stock_symbol):
     return yf.Ticker(stock_symbol)
@@ -39,11 +40,14 @@ def get_financial_statements(yf_ticker, fx_rates):
     cash_t = safe_transpose(cash_flow)
     info = yf_ticker.info
     financial_currency = info.get('financialCurrency')
+    print(financial_currency)
     if financial_currency == 'USD':
+        return income_t, balance_t, cash_t, info, 1
+    elif financial_currency is None:
         return income_t, balance_t, cash_t, info, 1
     else:
         rate = fx_rates[financial_currency]
-        return income_t, balance_t, cash_t, rate
+        return income_t, balance_t, cash_t, info, rate
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -73,7 +77,7 @@ def get_equity(balance_sheet, currency):
     shareholder_equity = shareholder_equity_series.iloc[0]
     if shareholder_equity < 0:
         return None
-    shareholder_equity *= currency
+    shareholder_equity /= currency
     return shareholder_equity
 
 def get_total_debt(balance_sheet, currency):
@@ -85,7 +89,7 @@ def get_total_debt(balance_sheet, currency):
     else:
         return None
     total_debt = total_debt_series.iloc[0]
-    total_debt *= currency
+    total_debt /= currency
     return total_debt
 
 def get_revenue(income_statement, currency):
@@ -103,9 +107,9 @@ def get_revenue(income_statement, currency):
         return None, None
 
     recent_revenue = revenue_series.iloc[0]
-    recent_revenue *= currency
+    recent_revenue /= currency
     previous_revenue = revenue_series.iloc[1]
-    previous_revenue *= currency
+    previous_revenue /= currency
     return recent_revenue, previous_revenue
 
 def get_gross_profit(income_statement, currency):
@@ -117,7 +121,7 @@ def get_gross_profit(income_statement, currency):
         return None
 
     gross_profit = gross_profit_series.iloc[0]
-    gross_profit *= currency
+    gross_profit /= currency
     return gross_profit
 
 def get_net_income(income_statement, currency):
@@ -133,7 +137,7 @@ def get_net_income(income_statement, currency):
         return None
 
     net_income = net_income_series.iloc[0]
-    net_income *= currency
+    net_income /= currency
     return net_income
 
 #----------------------------------------------------------------------------------------------------------------------
