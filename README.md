@@ -50,6 +50,7 @@ peer-benchmarks
 │   ├── __init__.py
 │   ├── config.py # Paths for saving benchmark data
 │   └── main.py # Main script for calculating benchmarks
+├── ex_images/ # Stores example iamges for README
 ├── README.md # Current file
 └── environment.yml # Required packages
 ```
@@ -58,38 +59,40 @@ peer-benchmarks
 
 ## 🚧 Setup Instructions
 
-1. **Clone the repository**
+1. **Clone the repo and enter it**
+```bash
+   git clone https://github.com/JustinWoo20/peer-benchmarks.git
+   cd peer-benchmarks
+```
 
-```git clone https://github.com/JustinWoo20/peer-benchmarks.git```
+2. **Create the environment and install dependencies** (choose one)
 
-2. **Navigate to project repository**
+   **Option A: Conda**
+```bash
+   conda env create -f environment.yml
+   conda activate peer-benchmarks
+```
 
-```cd peer-benchmarks/peer_benchmarks```
+   **Option B: venv + pip**
+```bash
+   python -m venv .venv
+   source .venv/bin/activate      # macOS/Linux
+   .\.venv\Scripts\activate       # Windows
+   pip install -r requirements.txt
+```
 
-3. **Create and activate new environment**
-Create:
+3. **Get an API key**
 
-```python -m venv .venv```
+   Create a free key at [ExchangeRate-API](https://www.exchangerate-api.com/docs/python-currency-api), then create a `.env` file in the project root:
+```
+   EXCHANGE_RATE_API_KEY=your_key_here
+```
 
-Activate it:
-
-Windows ```.\.venv\Scripts\activate```
-
-macOS/Linux ```source .venv/bin/activate```
-
-4. Install dependencies
-```pip install -r environment.yml```
-
-5. Create .env file
-You will need to create a free API Key at the following website:
-https://www.exchangerate-api.com/docs/python-currency-api
-
-6. Copy your API key to the .env file
-
-7. Run the calculator
-```python scripts/main.py```
-
-8. Select sector, industry, or both when prompted
+4. **Run the calculator**
+```bash
+   python -m peer_benchmarks.main
+```
+   Choose sector, industry, or both when prompted.
 
 ---
 
@@ -100,7 +103,7 @@ https://www.exchangerate-api.com/docs/python-currency-api
 
 ---
 ## 📌 Future Improvements
-- Calculate more financial ratios
+- Add additional financial ratios
 - Add regional peer groups
 
 ---
@@ -109,12 +112,7 @@ https://www.exchangerate-api.com/docs/python-currency-api
 MIT License – free to use, modify, and distribute.
 
 ---
-
-### 🎯 Update
-- Refactored from csv to SQLite
-
----
 ### ⚠️ Disclaimer
-This tool is not licensed financial advice. It is intended for discovering possible investment ideas. 
-It should not be used as the deciding factor for investment decisions. 
-Always perform independent research and consult a licensed financial professional before any stock purchases.
+This tool is not licensed financial advice. It is intended for assistance in personal research.
+Always perform independent research and consult a licensed financial professional before 
+making any financial decisions.
