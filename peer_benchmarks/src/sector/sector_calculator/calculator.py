@@ -11,7 +11,6 @@ conversion_url = f"https://v6.exchangerate-api.com/v6/{conversion_key}/latest/US
 conversion_response = requests.get(conversion_url)
 conversion_json = conversion_response.json()
 exchange_rates = conversion_json['conversion_rates']
-print(exchange_rates)
 
 def get_yf_ticker(stock_symbol):
     return yf.Ticker(stock_symbol)
@@ -40,7 +39,6 @@ def get_financial_statements(yf_ticker, fx_rates):
     cash_t = safe_transpose(cash_flow)
     info = yf_ticker.info
     financial_currency = info.get('financialCurrency')
-    print(financial_currency)
     if financial_currency == 'USD':
         return income_t, balance_t, cash_t, info, 1
     elif financial_currency is None:
