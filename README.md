@@ -93,6 +93,7 @@ peer-benchmarks
    python -m peer_benchmarks.main
 ```
    Choose sector, industry, or both when prompted.
+   Note that running the both option may cause rate limit errors with the yfinance API
 
 ---
 
