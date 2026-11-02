@@ -205,7 +205,7 @@ def get_roe_inputs(income_statement, balance_sheet, currency):
 def calculate_roe(roe_pairs):
     # Industry net income / industry equity
     net_income_sum = sum(ni for ni, _ in roe_pairs)
-    equity_sum = sum(equity for equity, _ in roe_pairs)
+    equity_sum = sum(equity for _, equity in roe_pairs)
 
     return round(net_income_sum / equity_sum, 2)
 
