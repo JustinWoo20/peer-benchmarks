@@ -253,7 +253,6 @@ def calculate_benchmarks(sect_ind_stock_dict):
         if sector == 'Financial Services':
             calculate_gp = False
         for ind, stock_list in industries.items():
-            print(f"Now working on {ind}")
             # Blank list for storing inputs
             pb_list = []
             de_list = []
@@ -263,7 +262,6 @@ def calculate_benchmarks(sect_ind_stock_dict):
             ttm_pe_list = []
             forward_pe_list = []
             for stock in stock_list:
-                print(f"Working on {stock}")
                 yf_ticker = get_yf_ticker(stock)
                 income, balance, cash, stock_info, rate = get_financial_statements(yf_ticker=yf_ticker,
                                                                                    fx_rates=exchange_rates)
